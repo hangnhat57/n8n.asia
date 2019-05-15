@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>gcp on My Blog Site</title>
+    <link>http://example.org/tags/gcp/</link>
+    <description>Recent content in gcp on My Blog Site</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 02 Apr 2014 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="http://example.org/tags/gcp/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Google Cloud Series: Compute Engine In Action</title>
+      <link>http://example.org/post/compute/</link>
+      <pubDate>Wed, 02 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://example.org/post/compute/</guid>
+      <description>=============================================
+Objectives:
+Deploy a highly scalable nodejs app on GCE.
+Prerequisites:
+Folk and clone this repo: https://github.com/hangnhat57/compute-engine-101/
+Create a service account which have Roles : Compute Instance Admin (v1) and Source Repo Writer
+Create a service account Deployment Strategy:
+1. Create a startup script which will automatically get code, install dependencies then start web server right after instances start.
+2. Create an instance template with startup script.
+3. Create an instance managed group and enable autoscaling.</description>
+    </item>
+    
+  </channel>
+</rss>

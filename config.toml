@@ -1,0 +1,21 @@
+baseURL = "http://example.org/"
+languageCode = "en-us"
+title = "My Blog Site"
+theme = "dream"
+defaultContentLanguage = "en"
+
+[params]
+  author = "Nhat Nguyen"
+  description = "Nhat Nguyen Hang"
+  avatar = "/images/avatar.JPG"
+  motto = "In My Head."
+
+  email = "hangnhat57@gmail.com"
+  github = "hangnhat57"
+#   linkedin = "钺杨g1eny0ung"
+ 
+
+  siteStartYear = 2019
+  aboutHeader = "About"
+
+  paginate = 10

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>
+Google Cloud Series: Compute Engine In Action
+</title>
+
+  
+  
+  <meta name="author" content="Nhat Nguyen" />
+  <meta name="description" content="=============================================
+Objectives:
+Deploy a highly scalable nodejs app on GCE.
+Prerequisites:
+Folk and clone this repo: https://github.com/hangnhat57/compute-engine-101/
+Create a service account which have Roles : Compute Instance Admin (v1) and Source Repo Writer
+Create a service account Deployment Strategy:
+1. Create a startup script which will automatically get code, install dependencies then start web server right after instances start.
+2. Create an instance template with startup script.
+3. Create an instance managed group and enable autoscaling." />
+
+
+
+
+
+<meta name="generator" content="Hugo 0.55.5" />
+
+
+<link rel="canonical" href="http://example.org/post/compute/" />
+<link rel="alternative" href="/index.xml" title="My Blog Site" type="application/atom+xml" />
+
+<link href="/css/semantic.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="/css/site.css" />
+
+
+</head>
+
+<body>
+  <div class="flip-container">
+    <div class="flipper">
+      <section class="front">
+        
+<nav class="ui top secondary menu">
+  <div class="item">
+    <i class="inverted big link bullseye icon dream-flip-toggle" title="Flip it!"></i>
+  </div>
+  <div class="item">
+    <a href="/">
+      <i class="inverted big link home icon" title="Home"></i>
+    </a>
+  </div>
+</nav>
+ 
+<div class="ui centered grid">
+  <div class="fifteen wide mobile fifteen wide tablet eleven wide computer column post-list post-single-main">
+
+    <section class="ui secondary top attached black segment">
+      <a class="ui black right corner label" href="javascript:void(0)" onclick="savePostAsImg()">
+        <i class="save icon"></i>
+      </a>
+      <header>
+        <h1 class="ui header">
+          Google Cloud Series: Compute Engine In Action
+          <div class="sub header">@ Nhat Nguyen · Apr 2, 2014 · 3 min read · Update at Apr 2, 2014</div>
+        </h1>
+      </header>
+      <article class="post-content" style="margin-top: 2rem; font-size: 1.4rem;"><p>=============================================</p>
+
+<p><strong>Objectives:</strong></p>
+
+<p><em>Deploy a highly scalable nodejs app on GCE.</em></p>
+
+<p><strong>Prerequisites</strong>:</p>
+
+<p>Folk and clone this repo: <a href="https://github.com/hangnhat57/compute-engine-101/">https://github.com/hangnhat57/compute-engine-101/</a><br />
+Create a service account which have Roles : Compute Instance Admin (v1) and Source Repo Writer</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-11.56.12-AM.png" alt="" /></p>
+
+<p>Create a service account </p>
+
+<p><strong>Deployment Strategy:</strong></p>
+
+<p>1. Create a startup script which will automatically get code, install dependencies then start web server right after instances start.<br />
+2. Create an instance template with startup script.<br />
+3. Create an instance managed group and enable autoscaling.<br />
+4. Create a load balancing to route traffic between instances of group.</p>
+
+<p><strong>Actions:</strong></p>
+
+<p>1.Open Google Web Console, then go to Source Repositories.</p>
+
+<p>2.Enable API for project, this could take a while</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-12.56.23-PM.png" alt="" /></p>
+
+<p> Enable Source API for project</p>
+
+<p>3.Create a repository in CSR. It will give you 3 options how you save your code. For me, I mirror this repository with my github project.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-12.59.09-PM.png" alt="" /></p>
+
+<p>Select connect to Github and select project for mirroring</p>
+
+<p>Hold on, why we have to mirror Github repo to Google? Why don’t we directly use Github?<br />
+In case your repository is private, when an instance start, it would require your credential to get code from repo. Because we use startup start, cloning source code to instance must be automatically with out any human interactive. This means you’ll have to store your ssh key or user/password in instance metadata / environment variable, and of course it’s not a good way. So we mirror to GSR then grant access permission for a service account which will be assigned to instance template.</p>
+
+<p>4.On your local machine, open terminal then cd to project folder that you’ve cloned. </p>
+
+<p>5.Open startup.sh file, change <repo name> to your google repository name then save it.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/carbon-1.png" alt="" /></p>
+
+<p>6.Open create-ins-template.sh, change <project-id> to your project id. <service-account-name> to the service account that you’ve created in prerequisites step. Then execute it.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/carbon.png" alt="" /></p>
+
+<p>You can go to web console -&gt; Compute Engine -&gt; Instance templates section to create manually by Web UI also.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-2.16.59-PM.png" alt="" /></p>
+
+<p>7.Next, we create a managed instances group. Open create-ins-group.sh and execute first script block.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/carbon-2.png" alt="" /></p>
+
+<p>Then active auto scaling for that group </p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/carbon-3.png" alt="" /></p>
+
+<p>Now we have an instance group that have minimum 2 instances in region, will add or remove VMs to group if CPU usage reach 70%. Maximum instances number is 4.</p>
+
+<p>8.Execute script in create-health-check.sh to create a http health check for Load Balancer </p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/carbon-4.png" alt="" /></p>
+
+<p>9.Now on Web Console, go to Network services &gt; Load balancing and click on Create load balancer. Select Config HTTP(s) load balancer.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-2.51.19-PM.png" alt="" /></p>
+
+<p>10. Create a new backend service with the instance group and health check we’ve just created.</p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-3.07.47-PM.png" alt="" /></p>
+
+<p>Leave Host and Path rules, Frontend config by default, then Create Load balancer </p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-3.12.07-PM.png" alt="" /></p>
+
+<p>Load balancer would take a moment to set things up, then you can access your web app through load balancer external ip </p>
+
+<p><img src="http://n8n.asia/wp-content/uploads/2018/09/Screen-Shot-2018-09-06-at-3.20.35-PM-2.png" alt="" /></p>
+
+<p><em>And that’s it. You’ve deployed successfully a web server which always ready to scale up when needed. Autoscaler is turned on in the Instance Group governing the two instances. If there is an increase in usage (CPU in our example), the Autoscaler will spawn a new instance to handle the increase in traffic.</em></p>
+
+<p>Posted on <a href="http://n8n.asia/google-cloud-series-compute-engine-in-action/">6th September 20187th September 2018</a>Author <a href="http://n8n.asia/author/hangnhat57/">阮 日</a>Categories <a href="http://n8n.asia/category/cloud/">Cloud</a>, <a href="http://n8n.asia/category/dev/">Development</a>, <a href="http://n8n.asia/category/devops/">DevOps</a>, <a href="http://n8n.asia/category/en/">English</a>Tags <a href="http://n8n.asia/tag/action/">action</a>, <a href="http://n8n.asia/tag/architect/">architect</a>, <a href="http://n8n.asia/tag/cloud/">cloud</a>, <a href="http://n8n.asia/tag/google/">google</a>, <a href="http://n8n.asia/tag/practice/">practice</a></p>
+</article>
+    </section>
+
+    <footer class="ui secondary attached segment dream-tags">
+      
+      
+      <a class="ui label" href="/tags/cloud" title="cloud">cloud</a>
+      
+      <a class="ui label" href="/tags/google" title="google">google</a>
+      
+      <a class="ui label" href="/tags/gcp" title="gcp">gcp</a>
+      
+      
+    </footer>
+
+    
+
+    
+
+  </div>
+  <div class="fifteen wide mobile fifteen wide tablet four wide computer column">
+
+    <section class="ui top attached center aligned inverted segment">
+  <div class="ui small circular image">
+    
+    <img src="/images/avatar.JPG">
+    
+  </div>
+  <h3 class="ui header">Nhat Nguyen&#39;s blog<div class="sub header" style="color: white;">In My Head.</div>
+  </h3>
+
+  <div class="ui inverted horizontal list">
+    
+    <a class="item" href="/post">
+      <i class="archive icon" title="Archives"></i>
+    </a>
+    
+    <a class="item" href="/tags">
+      <i class="tags icon" title="All Tags"></i>
+    </a>
+    <a class="item" href="/categories">
+      <i class="inverted cubes icon" title="All Categories"></i>
+    </a>
+  </div>
+
+  <a id="tag-category-pop" class="ui red right corner label">
+    <i class="pointing down icon" title="Click this to pop tags and categories"></i>
+  </a>
+</section>
+
+
+<section class="ui attached center aligned inverted segment dream-header-tags dream-tags">
+  
+  <a class="ui label" href="/tags/cloud" title="cloud">cloud</a>
+  
+  <a class="ui label" href="/tags/development" title="development">development</a>
+  
+  <a class="ui label" href="/tags/gcp" title="gcp">gcp</a>
+  
+  <a class="ui label" href="/tags/go" title="go">go</a>
+  
+  <a class="ui label" href="/tags/golang" title="golang">golang</a>
+  
+  <a class="ui label" href="/tags/google" title="google">google</a>
+  
+  <a class="ui label" href="/tags/hugo" title="hugo">hugo</a>
+  
+  <a class="ui label" href="/tags/templates" title="templates">templates</a>
+  
+  <a class="ui label" href="/tags/themes" title="themes">themes</a>
+  
+</section>
+
+
+
+<section class="ui attached inverted segment dream-categories">
+  <div class="ui inverted accordion">
+    
+    <div class="title">
+      <i class="dropdown icon"></i>
+      <a href="/categories/cloud" class="item" style="color: white;">cloud</a>
+    </div>
+    <div class="content">
+      <div class="ui link inverted list">
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/compute/" class="item">Google Cloud Series: Compute Engine In Action</a>
+        </div>
+      </div>
+      
+      </div>
+    </div>
+    
+    <div class="title">
+      <i class="dropdown icon"></i>
+      <a href="/categories/development" class="item" style="color: white;">development</a>
+    </div>
+    <div class="content">
+      <div class="ui link inverted list">
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/goisforlovers/" class="item">(Hu)go Template Primer</a>
+        </div>
+      </div>
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/hugoisforlovers/" class="item">Getting Started with Hugo</a>
+        </div>
+      </div>
+      
+      </div>
+    </div>
+    
+    <div class="title">
+      <i class="dropdown icon"></i>
+      <a href="/categories/golang" class="item" style="color: white;">golang</a>
+    </div>
+    <div class="content">
+      <div class="ui link inverted list">
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/goisforlovers/" class="item">(Hu)go Template Primer</a>
+        </div>
+      </div>
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/hugoisforlovers/" class="item">Getting Started with Hugo</a>
+        </div>
+      </div>
+      
+      </div>
+    </div>
+    
+    <div class="title">
+      <i class="dropdown icon"></i>
+      <a href="/categories/google-cloud" class="item" style="color: white;">google-cloud</a>
+    </div>
+    <div class="content">
+      <div class="ui link inverted list">
+      
+      <div class="item" style="padding-left: 24px;">
+        <i class="cocktail icon"></i>
+        <div class="content">
+          <a href="http://example.org/post/compute/" class="item">Google Cloud Series: Compute Engine In Action</a>
+        </div>
+      </div>
+      
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+
+<section class="ui bottom attached center aligned inverted segment">
+    
+    <p>© 2019 My Blog Site</p>
+    
+</section>
+
+
+  </div>
+</div>
+
+      </section>
+      <section class="back">
+        <nav class="ui top secondary menu" style="overflow-x: auto">
+  <div class="item">
+    <i class="inverted big link bullseye icon dream-flip-toggle" title="Flip it!"></i>
+  </div>
+  
+  <div class="item">
+    <a href="mailto:hangnhat57@gmail.com">
+      <i class="inverted big mail icon" title="email"></i>
+    </a>
+  </div>
+  
+  
+  <div class="item">
+    <a href="https://github.com/hangnhat57" target="_blank">
+      <i class="inverted big github icon" title="github"></i>
+    </a>
+  </div>
+  
+  
+  <div class="item">
+    <a href="https://www.linkedin.com/in/%e9%92%ba%e6%9d%a8g1eny0ung" target="_blank">
+      <i class="inverted big linkedin icon" title="linkedin"></i>
+    </a>
+  </div>
+  
+  
+  
+</nav>
+
+<div class="ui centered grid about">
+  <div class="fifteen wide mobile fifteen wide tablet fifteen wide computer column">
+
+    <section class="ui stacked segments">
+      <header class="ui inverted segment">
+        <h2 class="ui header">
+          About
+        </h2>
+      </header>
+
+      <article class="ui inverted segment back-about">
+        <div class="ui stackable three column grid">
+          <div class="column">
+              
+              <p>First line</p>
+
+<p>Second line</p>
+
+<p>Third line</p>
+
+              
+          </div>
+          <div class="column">
+              
+          </div>
+          <div class="column">
+              
+          </div>
+        </div>
+      </article>
+
+      
+
+      
+      
+    </section>
+
+  </div>
+</div>
+
+      </section>
+    </div>
+  </div>
+
+  
+<script src="/js/jquery.min.js"></script>
+<script src="/js/semantic.min.js"></script>
+<script src="/js/html2canvas.min.js"></script>
+<script src="/js/bg.js"></script>
+<script src="/js/site.js"></script>
+
+
+
+</body>
+
+</html>
